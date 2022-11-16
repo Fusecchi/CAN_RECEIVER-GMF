@@ -573,12 +573,27 @@ void setup()
   serial1.begin(9600);
   //bool ret = CANInit(CAN_1000KBPS, 0);  // CAN_RX mapped to PA11, CAN_TX mapped to PA12
   //bool ret = CANInit(CAN_1000KBPS, 2);  // CAN_RX mapped to PB8, CAN_TX mapped to PB9
- // bool ret = CANInit(CAN_250KBPS, 3);  // CAN_RX mapped to PD0, CAN_TX mapped to PD1
- // if (!ret) while(true);
+  bool ret = CANInit(CAN_250KBPS, 3);  // CAN_RX mapped to PD0, CAN_TX mapped to PD1
+  if (!ret)
+  {
+    serial1.println("CAN FAILED");
+  }else{
+    serial1.println("CAN OK");
+  } while(true);
   
 }
 void loop()
 {
   // put your main code here, to run repeatedly:
-  serial1.println("hello world123");
+    CAN_msg_t CAN_RX_msg;
+
+  if(CANMsgAvail(1))
+  {
+    CANReceive(1, &CAN_RX_msg);
+    for(int i = 0; i<CAN_RX_msg.len; i++)
+    {
+        serial1.println(CAN_RX_msg.data[i]);
+        serial1.print("\t");
+    }
+  }
 }
