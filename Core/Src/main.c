@@ -51,27 +51,40 @@ uint8_t TxData[8];
 uint8_t RxData[8];
 uint32_t Mailbox;
 uint32_t terima = 0;
-
-
-/* USER CODE END PV */
-
-/* Variable for Nextion*/
-
-uint8_t nexTemp=0;
-uint8_t Cmd_End[3] = {0xff,0xff,0xff};
-
-uint8_t power; // Data inside RxData[0]
-uint8_t rcConn;
-uint8_t tugConn;
-uint8_t tugStat;
-uint8_t signalVal;
-uint8_t hydroPres; // Data inside RxData[1]
-uint8_t hydroLev; // Data inside RxData[2]
-uint8_t batt1; // Data inside RxData[3]
-uint8_t batt2; // Data inside RxData[4]
-uint8_t byte1=0;
-uint8_t byte1_value;
+uint8_t kirim = 0;
+uint8_t current_power;
+uint8_t new_power;
+uint8_t current_rccConn;
 uint8_t new_rccConn;
+uint8_t sendto_tugConn;
+uint8_t new_tugConn;
+uint8_t sendto_tugStat;
+uint8_t new_tugstat;
+uint8_t sendto_signalVal;
+uint8_t new_signalVal;
+uint8_t sendto_hydroPres; // Data to write inside TxData[1]
+uint8_t new_hydroPres;
+uint8_t sendto_hydroLev; // Data to write inside TxData[2]
+uint8_t new_hydroLev;
+uint8_t sendto_batt1; // Data to write inside TxData[3]
+uint8_t new_batt1;
+uint8_t sendto_batt2; // Data to write inside TxData[4]
+uint8_t new_batt2;
+uint8_t byte1_value;
+uint8_t byte2_value;
+uint8_t byte3_value;
+uint8_t byte4_value;
+uint8_t byte5_value;
+uint8_t byte6_value;
+uint8_t byte7_value;
+uint8_t byte8_value;
+uint8_t byte1=0;
+uint8_t byte2=0;
+uint8_t byte3=0;
+uint8_t byte4=0;
+uint8_t byte5=0;
+uint8_t mockdata[8] = {1, 2, 3, 4, 5, 6, 7, 0};
+uint8_t counter;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -183,15 +196,37 @@ void Can_Send(uint8_t id, uint8_t data[8])
 	kirim++;
 
 }
+
 void Write_Bit()
 {
 	byte1_value = new_power;
-	byte1_value = byte1_value << 2;
+	byte1_value = byte1_value << 1;
 	byte1_value = byte1_value | new_rccConn;
+	byte1_value = byte1_value << 1;
+	byte1_value = byte1_value | new_tugConn;
 	byte1_value = byte1_value << 2;
-	byte1_value = byte1_value << 2;
-	byte1 = byte1_value;
+	byte1_value = byte1_value | new_tugstat;
+	byte1_value = byte1_value << 3;
+	byte1_value = byte1_value | new_signalVal;
+ 	byte1 = byte1_value;
 	mockdata[7]=byte1;
+
+	byte2_value = new_hydroPres;
+	byte2 = byte2_value;
+	mockdata[6]=byte2;
+
+	byte3_value = new_hydroLev;
+	byte3 = byte3_value;
+	mockdata[5]=byte3;
+
+	byte4_value = new_batt1;
+	byte4 = byte4_value;
+	mockdata[4]=byte3;
+
+	byte5_value = new_batt2;
+	byte5 = byte5_value;
+	mockdata[3]=byte5;
+
 }
 
 
@@ -242,8 +277,8 @@ int main(void)
 //  {
 //	  Error_Handler();
 //  }
-  	CAN_GeneralSetup(&hcan1);
-  	//HAL_CAN_RxFifo0MsgPendingCallback(&hcan1);
+ 	CAN_GeneralSetup(&hcan1);
+  	HAL_CAN_RxFifo0MsgPendingCallback(&hcan1);
 
 
 
@@ -256,9 +291,37 @@ int main(void)
   {
     /* USER CODE END WHILE */
 	
-	HAL_Delay(1);
-	Write_Bit();
-	Can_Send(1, mockdata);
+	  HAL_Delay(1);
+	  Can_Send(1024, mockdata);
+	  counter++;
+	  new_power++;
+	  new_rccConn++;
+	  new_tugConn++;
+	  new_tugstat++;
+	  new_signalVal++;
+	  new_hydroLev++;
+	  new_hydroPres++;
+	  new_batt1+=2;
+	  new_batt2+=2;
+	  Write_Bit();
+	  switch(counter)
+	  {
+	  case 2:
+		  new_power = 0;
+		  new_tugConn = 0;
+		  new_rccConn = 0;
+		  break;
+	  case 3:
+		 new_tugstat = 0;
+		 break;
+	  case 6:
+		  new_signalVal = 0;
+		  break;
+	  case 8:
+		  counter = 0;
+		  break;
+	  }
+	  HAL_Delay(50);
 
     /* USER CODE BEGIN 3 */
   }
