@@ -69,6 +69,9 @@ uint8_t hydroPres; // Data inside RxData[1]
 uint8_t hydroLev; // Data inside RxData[2]
 uint8_t batt1; // Data inside RxData[3]
 uint8_t batt2; // Data inside RxData[4]
+uint8_t byte1=0;
+uint8_t byte1_value;
+uint8_t new_rccConn;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -164,6 +167,32 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 	terima++;
 
 }
+void Can_Send(uint8_t id, uint8_t data[8])
+{
+	Tx_transmit.DLC = 8;
+	Tx_transmit.IDE = CAN_ID_STD;
+	Tx_transmit.StdId = id;
+	Tx_transmit.RTR = CAN_RTR_DATA;
+
+	for(int i = 0; i<8; i++)
+	{
+		TxData[i] = data[i];
+	}
+
+	HAL_CAN_AddTxMessage(&hcan1, &Tx_transmit, TxData, &Mailbox);
+	kirim++;
+
+}
+void Write_Bit()
+{
+	byte1_value = new_power;
+	byte1_value = byte1_value << 2;
+	byte1_value = byte1_value | new_rccConn;
+	byte1_value = byte1_value << 2;
+	byte1_value = byte1_value << 2;
+	byte1 = byte1_value;
+	mockdata[7]=byte1;
+}
 
 
 /* USER CODE END PFP */
@@ -226,6 +255,10 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+	
+	HAL_Delay(1);
+	Write_Bit();
+	Can_Send(1, mockdata);
 
     /* USER CODE BEGIN 3 */
   }
